@@ -1,25 +1,25 @@
-import { DependencyContainer } from "tsyringe";
+import type { DependencyContainer } from "tsyringe";
 
-import { Ilogger } from "@spt-aki/models/spt/utils/Ilogger";
-import { DatabaseServer } from "@spt-aki/servers/DatabaseServer";
+import type { ILogger } from "@spt-aki/models/spt/utils/ILogger";
+import type { DatabaseServer } from "@spt-aki/servers/DatabaseServer";
 
-import { ConfigServer } from "@spt-aki/servers/ConfigServer";
+import type { ConfigServer } from "@spt-aki/servers/ConfigServer";
 import { ConfigTypes } from "@spt-aki/models/enums/ConfigTypes";
-import { ILocationConfig } from "@spt-aki/models/spt/config/ILocationConfig";
-import { ILootConfig } from "@spt-aki/models/spt/config/ILootConfig";
+import type { ILocationConfig } from "@spt-aki/models/spt/config/ILocationConfig";
+import type { ILootConfig } from "@spt-aki/models/spt/config/ILootConfig";
 
 //Mod setup
-import { IPostDBLoadMod } from "@spt-aki/models/external/IPostDBLoadMod";
+import type { IPostDBLoadMod } from "@spt-aki/models/external/IPostDBLoadMod";
 import { LogTextColor } from "@spt-aki/models/spt/logging/LogTextColor";
-import { VFS } from "@spt-aki/utils/VFS";
+import type { VFS } from "@spt-aki/utils/VFS";
 
 import { jsonc } from "jsonc";
-import * as path from "path";
+import * as path from "node:path";
 
 
 class ReLooted implements IPostDBLoadMod
 {
-    private logger: Ilogger;
+    private logger: ILogger;
 
     private db: DatabaseServer;
     private cfgServer: ConfigServer;
@@ -40,7 +40,7 @@ class ReLooted implements IPostDBLoadMod
         this.config = jsonc.parse( this.vfs.readFile( configFile ) );
 
         // Get stuff from the server container.
-        this.logger = container.resolve<Ilogger>( "WinstonLogger" );
+        this.logger = container.resolve<ILogger>( "WinstonLogger" );
 
         // Get database from server.
         this.db = container.resolve<DatabaseServer>( "DatabaseServer" );
@@ -59,7 +59,7 @@ class ReLooted implements IPostDBLoadMod
             "woods"
         ]
 
-        let locations = this.db.getTables().locations;
+        const locations = this.db.getTables().locations;
 
         this.printColor( "[ReLooted] Starting! Greetings from Leaves!", LogTextColor.GREEN );
         this.printColor( "[ReLooted] FYI: This mod should be loaded as early as possible to maximize compatibility.", LogTextColor.CYAN );
@@ -69,9 +69,9 @@ class ReLooted implements IPostDBLoadMod
         {
             this.printColor( "[ReLooted]\t Fixing Giving Tree Keyspawn chances", LogTextColor.YELLOW );
 
-            for ( let point of this.lootConfig.looseLoot[ "bigmap" ] )
+            for ( const point of this.lootConfig.looseLoot.bigmap )
             {
-                if ( point.template.Id == "Loot 19 (9)3856272" || point.template.Id == "Loot 19 (8)3860542" )
+                if ( point.template.Id === "Loot 19 (9)3856272" || point.template.Id === "Loot 19 (8)3860542" )
                 {
                     point.probability = this.config.givingTreeKeySpawnChance;
                 }
@@ -80,12 +80,12 @@ class ReLooted implements IPostDBLoadMod
 
 
 
-        for ( let map of mapNames )
+        for ( const map of mapNames )
         {
-            this.printColor( "[ReLooted]\t loading data for: " + map, LogTextColor.YELLOW );
-            const newData = require( "../assets/" + map );
+            this.printColor( `[ReLooted]\t loading data for: ${map}`, LogTextColor.YELLOW );
+            const newData = require( `../assets/${map}` );
 
-            this.printColor( "[ReLooted]\t Injecting new data for " + map, LogTextColor.YELLOW );
+            this.printColor( `[ReLooted]\t Injecting new data for ${map}`, LogTextColor.YELLOW );
             locations[ map ].looseLoot.spawnpoints = newData.spawnpoints;
 
             if ( this.config.changeSpawnPointCount )
@@ -96,7 +96,7 @@ class ReLooted implements IPostDBLoadMod
 
         if ( this.config.shorelineKeycards )
         {
-            this.lootConfig.looseLoot[ "shoreline" ] = this.shorelineKeycardsJson.shoreline;
+            this.lootConfig.looseLoot.shoreline = this.shorelineKeycardsJson.shoreline;
             this.printColor( "[ReLooted]\t Injecting keycard spawns to shoreline", LogTextColor.YELLOW );
         }
 
@@ -104,7 +104,7 @@ class ReLooted implements IPostDBLoadMod
         {
             this.printColor( "[ReLooted]\t Setting looseLootMultiplier for all locations to 1.", LogTextColor.YELLOW );
             this.printColor( "[ReLooted]\t Keep in mind that mods like SVM might override this. ", LogTextColor.YELLOW );
-            for ( let multi in this.locConfig.looseLootMultiplier )
+            for ( const multi in this.locConfig.looseLootMultiplier )
             {
                 this.locConfig.looseLootMultiplier[ multi ] = 1;
             }
@@ -116,18 +116,18 @@ class ReLooted implements IPostDBLoadMod
             for( const point of this.streetsbloodykey )
             {
                 point.probability *= this.config.streetsbloodykeyProbabilityMultiplier;
-                locations[ "tarkovstreets" ].looseLoot.spawnpoints.push( point );
+                locations.tarkovstreets.looseLoot.spawnpoints.push( point );
             }
             
         }
     }
 
-    private debugJsonOutput ( jsonObject: any, label: string = "" )
+    private debugJsonOutput ( jsonObject: any, label = "" )
     {
 
         if ( label.length > 0 )
         {
-            this.logger.logWithColor( "[" + label + "]", LogTextColor.GREEN );
+            this.logger.logWithColor( `[${label}]`, LogTextColor.GREEN );
         }
         this.logger.logWithColor( JSON.stringify( jsonObject, null, 4 ), LogTextColor.MAGENTA );
     }
