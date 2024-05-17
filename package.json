@@ -1,10 +1,10 @@
 {
-    "name": "ReLooted",
+    "name": "relooted",
     "version": "1.1.0",
     "main": "src/mod.js",
     "license": "MIT",
-    "author": "Leaves",
-    "helpAuthor": "No;Hurry",
+    "author": "leaves",
+    "helpAuthor": "no;hurry",
     "akiVersion": ">= 3.8.0",
     "scripts": {
         "setup": "npm i",
